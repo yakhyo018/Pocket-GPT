@@ -1,0 +1,33 @@
+# Models and weights never go into git (GGUF ~1 GB, adapters, checkpoints).
+models/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+checkpoints/
+outputs/
+
+# Local data: conversations and the downloaded raw datasets.
+backend/data/
+data/raw/
+*.db
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Web
+web/node_modules/
+web/.next/
+web/next-env.d.ts
+web/.env*.local
+
+.DS_Store

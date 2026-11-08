@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**', 'chore/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend — ruff, pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      # No model, no GPU: the tests run with the fake provider and an in-memory SQLite.
+      - run: pip install -e '.[dev]'
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q
+
+  web:
+    name: Web — typecheck, lint, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+          cache-dependency-path: web/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - run: yarn typecheck
+      - run: yarn lint
+      - run: yarn build
