@@ -58,6 +58,16 @@ def main() -> None:
 
     cuda = torch.cuda.is_available()
     bf16 = cuda and torch.cuda.is_bf16_supported()  # T4: no bf16 → fp16
+    if cuda and torch.cuda.get_device_capability()[0] < 8:
+        # TRL's chunked log-prob kernel multiplies 16-bit inputs into an fp32 result with
+        # `torch.addmm(..., out_dtype=float32)`, which needs compute capability 8.0+ (A100 and
+        # later); on a T4 (7.5) backward fails. Its own fallback upcasts to fp32 first — the same
+        # result, a little slower. TRL has no setting for it, so the module flag is switched off.
+        import trl.kernels.chunked_divergence as chunked_divergence
+        import trl.kernels.chunked_logprob as chunked_logprob
+
+        chunked_logprob._MM_OUT_DTYPE = False
+        chunked_divergence._MM_OUT_DTYPE = False
     train, val = load('train', args.limit), load('val', args.limit // 4 if args.limit else 0)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
@@ -72,6 +82,9 @@ def main() -> None:
             bnb_4bit_compute_dtype=torch.bfloat16 if bf16 else torch.float16,
         )
         model_kwargs['device_map'] = 'auto'
+        # The modules bitsandbytes leaves unquantized (embeddings, lm_head, norms) load in the
+        # checkpoint's dtype — bfloat16 for Qwen2.5. A T4 has no bf16: load them in fp16 there.
+        model_kwargs['dtype'] = torch.bfloat16 if bf16 else torch.float16
     else:
         model_kwargs['dtype'] = torch.float32
     model = AutoModelForCausalLM.from_pretrained(args.model, **model_kwargs)
