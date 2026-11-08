@@ -78,9 +78,9 @@ llama-server (:8080, Metal) ── models/*.gguf        (yoki OpenRouter, xuddi 
 
 ## 6. Sizning qadamlaringiz
 
-1. **GitHub.** Repo yarating, masalan `yakhyo018/pocket-gpt`. Keyin:
+1. **GitHub.** Repo yarating, masalan `yakhyo018/Pocket-GPT`. Keyin:
    ```bash
-   cd ~/Desktop/pocket-gpt && git remote add origin https://github.com/yakhyo018/pocket-gpt.git && git push -u origin main
+   cd ~/Desktop/pocket-gpt && git remote add origin https://github.com/yakhyo018/Pocket-GPT.git && git push -u origin main
    ```
 2. **Colab.** `training/train_colab.ipynb` ni oching, Runtime'ni **T4 GPU** qiling va *Run all* bosing (~40–60 daqiqa). Repo private bo'lsa, Colab Secrets'ga `GITHUB_TOKEN` qo'shing.
 3. **Mac.** Yuklab olingan `pocketgpt-1.5b-q4_k_m.gguf` faylini `models/` papkasiga qo'ying, keyin:
