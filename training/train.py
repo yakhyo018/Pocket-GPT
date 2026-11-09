@@ -2,6 +2,7 @@
 C3 — LoRA fine-tune of a Qwen2.5 Instruct model on data/pocket_chat → an adapter (+ merged).
 
 Colab (T4, 16 GB):   python training/train.py --model Qwen/Qwen2.5-1.5B-Instruct --qlora
+Merge only:          python training/train.py --merge-only   (adapter already in outputs/)
 Mac smoke test:      python training/train.py --model Qwen/Qwen2.5-0.5B-Instruct \
                          --limit 40 --max-steps 5
 
@@ -38,6 +39,18 @@ def load(split: str, limit: int) -> Dataset:
     )
 
 
+def merge(model_name: str, adapter_dir: str) -> None:
+    """Reload the base in 16-bit (a 4-bit base cannot be merged), apply the adapter, merge."""
+    from peft import PeftModel
+
+    base = AutoModelForCausalLM.from_pretrained(model_name, dtype=torch.float16)
+    merged = PeftModel.from_pretrained(base, adapter_dir).merge_and_unload()
+    merged_dir = Path(adapter_dir).with_name('pocket-merged')
+    merged.save_pretrained(merged_dir, safe_serialization=True)
+    AutoTokenizer.from_pretrained(adapter_dir).save_pretrained(merged_dir)
+    print('merged →', merged_dir)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='Qwen/Qwen2.5-1.5B-Instruct')
@@ -54,7 +67,13 @@ def main() -> None:
     parser.add_argument('--max-steps', type=int, default=-1)
     parser.add_argument('--out', default=str(ROOT / 'outputs' / 'pocket-lora'))
     parser.add_argument('--merge', action='store_true', help='also save base + adapter merged')
+    parser.add_argument(
+        '--merge-only', action='store_true', help='skip training; merge the adapter in --out'
+    )
     args = parser.parse_args()
+    if args.merge_only:
+        merge(args.model, args.out)
+        return
 
     cuda = torch.cuda.is_available()
     bf16 = cuda and torch.cuda.is_bf16_supported()  # T4: no bf16 → fp16
@@ -156,15 +175,7 @@ def main() -> None:
     print(json.dumps({k: v for k, v in report.items() if k != 'history'}, indent=2))
 
     if args.merge:
-        # Reload the base in 16-bit (a 4-bit base cannot be merged), apply the adapter, merge.
-        from peft import PeftModel
-
-        base = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float16)
-        merged = PeftModel.from_pretrained(base, args.out).merge_and_unload()
-        merged_dir = Path(args.out).with_name('pocket-merged')
-        merged.save_pretrained(merged_dir, safe_serialization=True)
-        tokenizer.save_pretrained(merged_dir)
-        print('merged →', merged_dir)
+        merge(args.model, args.out)
 
 
 if __name__ == '__main__':
