@@ -45,7 +45,7 @@ def merge(model_name: str, adapter_dir: str) -> None:
 
     base = AutoModelForCausalLM.from_pretrained(model_name, dtype=torch.float16)
     merged = PeftModel.from_pretrained(base, adapter_dir).merge_and_unload()
-    merged_dir = Path(adapter_dir).with_name('pocket-merged')
+    merged_dir = ROOT / 'outputs' / 'pocket-merged'  # local even when the adapter is on Drive
     merged.save_pretrained(merged_dir, safe_serialization=True)
     AutoTokenizer.from_pretrained(adapter_dir).save_pretrained(merged_dir)
     print('merged →', merged_dir)
