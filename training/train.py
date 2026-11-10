@@ -66,6 +66,12 @@ def main() -> None:
     )
     parser.add_argument('--max-steps', type=int, default=-1)
     parser.add_argument('--out', default=str(ROOT / 'outputs' / 'pocket-lora'))
+    parser.add_argument(
+        '--checkpoints',
+        default=str(ROOT / 'outputs' / 'checkpoints'),
+        help='checkpoint folder; a run resumes from the last checkpoint found here',
+    )
+    parser.add_argument('--save-steps', type=int, default=25)
     parser.add_argument('--merge', action='store_true', help='also save base + adapter merged')
     parser.add_argument(
         '--merge-only', action='store_true', help='skip training; merge the adapter in --out'
@@ -118,7 +124,7 @@ def main() -> None:
         task_type='CAUSAL_LM',
     )
     config = SFTConfig(
-        output_dir=str(ROOT / 'outputs' / 'checkpoints'),
+        output_dir=args.checkpoints,
         num_train_epochs=args.epochs,
         max_steps=args.max_steps,
         per_device_train_batch_size=args.batch,
@@ -133,7 +139,11 @@ def main() -> None:
         logging_steps=10,
         eval_strategy='steps' if len(val) else 'no',
         eval_steps=50,
-        save_strategy='no',
+        # Colab's free runtime can reset mid-run and wipe /content; with --checkpoints on Drive a
+        # rerun continues from the last checkpoint (adapter, optimizer, scheduler, RNG state).
+        save_strategy='steps',
+        save_steps=args.save_steps,
+        save_total_limit=1,
         report_to='none',
         seed=42,
         bf16=bf16,
@@ -150,7 +160,12 @@ def main() -> None:
     )
     trainer.model.print_trainable_parameters()
     started = time.perf_counter()
-    result = trainer.train()
+    from transformers.trainer_utils import get_last_checkpoint
+
+    last = get_last_checkpoint(args.checkpoints) if Path(args.checkpoints).is_dir() else None
+    if last:
+        print('resuming from', last)
+    result = trainer.train(resume_from_checkpoint=last)
     minutes = (time.perf_counter() - started) / 60
     # Save before evaluate(): an out-of-memory there must not lose the adapter.
     trainer.save_model(args.out)
@@ -168,7 +183,8 @@ def main() -> None:
         'lora_rank': args.rank,
         'train_loss': round(result.training_loss, 4),
         'eval_loss': round(metrics['eval_loss'], 4) if 'eval_loss' in metrics else None,
-        'minutes': round(minutes, 1),
+        'minutes': round(minutes, 1),  # this process only — a resumed run reports its own part
+        'resumed_from': last,
         'history': [h for h in trainer.state.log_history if 'loss' in h or 'eval_loss' in h],
     }
     Path(args.out, 'training.json').write_text(json.dumps(report, indent=2))
