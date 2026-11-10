@@ -1,7 +1,8 @@
 # Status
 
-_Last updated: 2026-11-08 — C1, C2, C5, C6 done; C3 code ready (smoke-tested on a Mac), the Colab run
-is the user's step; C4 has the base model's numbers. Nothing pushed (no GitHub repository yet)._
+_Last updated: 2026-11-10 — C1–C6 done. The Colab run (QLoRA, 132 min on a T4) finished; the tuned
+GGUF runs locally and beats the base on the frozen test (repetition 12.7 → 4.0 %, chrF 27.1 → 30.8).
+Pushed to github.com/yakhyo018/Pocket-GPT (`main`)._
 
 ## Done
 
@@ -19,16 +20,17 @@ is the user's step; C4 has the base model's numbers. Nothing pushed (no GitHub r
 Checked: backend pytest 21 passed, ruff clean; web typecheck, lint, build; in the browser —
 desktop and phone, streaming, Stop (llama-server logged `cancel task`), saved conversations.
 
-## The user's steps
+- **C3 run** on Colab: 225 steps, validation loss 1.791 → 1.722; adapter, checkpoints and GGUF on
+  Google Drive (`MyDrive/pocket-gpt`). `models/pocketgpt-1.5b-q4_k_m.gguf` (941 MB, git-ignored).
+- **C4** `reports/EVAL.md`, `reports/eval_tuned.json`.
 
-1. Create the GitHub repository and push (`main`), so Colab can clone it.
-2. Colab: open `training/train_colab.ipynb`, T4 runtime, Run all (~40–60 min); download the GGUF.
-3. Put it in `models/`, restart llama-server with it, run
-   `python training/evaluate.py --label tuned && python training/evaluate.py --compare base tuned`.
+## Next (optional)
+
+- Facts in Uzbek: a bigger base (Qwen2.5-7B on an L4/A100) or retrieval; DPO against repetition.
 
 ## Open
 
-- GGUF conversion was not run on the Mac (running llama.cpp's scripts locally was not allowed in the
-  session); it runs in the notebook.
+- GGUF conversion runs only in the notebook (llama.cpp's scripts were not run on the Mac).
+- English in-language rate dropped 98 → 96 %; Uzbek answers still contain invented facts.
 - On a phone the conversation list is hidden (only "New chat").
 - No login: a single local user. Do not expose the backend to the internet as it is.

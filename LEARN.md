@@ -75,6 +75,26 @@ set and a base-vs-tuned comparison prove the change, and the target languages ar
 - **chrF** (character n-gram F-score) against the reference: robust to Uzbek morphology, where
   word-level overlap fails. **repetition**: a 4-word phrase 4+ times — how small models break.
 
+## C3/C4 — The Colab run and the result (2026-11-10)
+
+- **Run:** Qwen2.5-1.5B-Instruct, QLoRA r=16, 1 epoch, 225 steps, 132.5 min on a T4. Validation loss
+  1.791 → 1.754 → 1.732 → 1.722 → 1.722 (steps 50–225); token accuracy 58 % → 62 %. The same
+  numbers in two runs (`seed=42`): the run is reproducible.
+- **Three things broke on Colab, each fixed in code, not by hand:** the T4 (compute capability 7.5)
+  cannot run TRL's fp32-output matmul → its fallback is switched on; Colab's torchao 0.10 made PEFT
+  refuse to merge → uninstalled; a runtime reset wiped `/content` twice (once after a finished run)
+  → the adapter, checkpoints (every 25 steps, with optimizer state) and the GGUF live on Google
+  Drive, and a rerun resumes or skips training.
+- **Result on the frozen 300-question test** (`reports/EVAL.md`): repetition 12.7 % → 4.0 %
+  (Uzbek 23 % → 9 %), chrF 27.1 → 30.8 (Uzbek 26.9 → 32.7), in-language 97.0 → 97.3 (English
+  98 → 96, the one metric that dropped).
+- **Three hand-picked questions misled.** In the notebook the tuned model looked worse in Uzbek; the
+  300-question test says it is clearly better. A few samples show the failure modes; only the full
+  test says which way the model moved.
+- **What did not change: facts.** Uzbek answers are fluent more often but still invent dates and
+  names — LoRA on 1,200 machine-translated chats teaches form, not knowledge. A bigger base (7B on
+  an L4/A100) or RAG would be the next step for facts.
+
 ## Interview questions
 
 1. Why stream with SSE and not WebSockets? One direction (server → browser) over plain HTTP —
@@ -86,3 +106,7 @@ set and a base-vs-tuned comparison prove the change, and the target languages ar
    adapter is in 16-bit and trained.
 5. Why chrF instead of BLEU for Uzbek? Agglutinative words share stems but not whole words;
    character n-grams credit them.
+6. How do you survive a preemptible GPU? Checkpoint to persistent storage (adapter + optimizer +
+   scheduler + RNG state) and make the job idempotent: rerun → resume or skip.
+7. Why did three samples disagree with the test set? Small samples show anecdotes; a fixed test set
+   measures the direction. Decide on the set, illustrate with samples.

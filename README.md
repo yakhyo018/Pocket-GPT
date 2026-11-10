@@ -7,14 +7,20 @@ LoRA fine-tuned on Google Colab for **English, Russian and Uzbek**, served as a 
 | --- | --- | --- |
 | C1 | Skeleton — FastAPI, SSE streaming, Next.js chat page, CI | ✅ |
 | C2 | Dataset — 3,600 / 150 / 300 chats (EN/RU/UZ, Apache-2.0 sources), frozen test | ✅ |
-| C3 | Fine-tune — `training/train.py` + Colab notebook (QLoRA on a T4) | ✅ code · ⏳ run on Colab |
-| C4 | Evaluation — in-language rate, chrF, repetition; base vs tuned | ✅ base · ⏳ tuned |
-| C5 | Local model — llama.cpp + GGUF, OpenAI-compatible provider | ✅ (base GGUF) |
+| C3 | Fine-tune — `training/train.py` + Colab notebook (QLoRA on a T4, 132 min) | ✅ |
+| C4 | Evaluation — in-language rate, chrF, repetition; base vs tuned | ✅ |
+| C5 | Local model — llama.cpp + GGUF, OpenAI-compatible provider | ✅ (tuned GGUF) |
 | C6 | Chat app — conversations (SQLite), Stop, context window, Markdown, OpenRouter | ✅ |
 
-Base model on the frozen test set (before fine-tuning): in the question's language 97 %, chrF 27.1,
-repetition 12.7 % — **Uzbek repeats itself in 23 % of answers**, which the fine-tune targets.
-Numbers: `reports/eval_base.json` (`reports/EVAL.md` appears after `evaluate.py --compare base tuned`).
+Frozen test set, 300 questions (EN/RU/UZ), base → tuned ([`reports/EVAL.md`](reports/EVAL.md)):
+
+| | in the question's language | chrF | repetition |
+| --- | ---: | ---: | ---: |
+| All | 97.0 → 97.3 % | 27.1 → **30.8** | 12.7 → **4.0 %** |
+| Uzbek | 95 → 97 % | 26.9 → **32.7** | 23 → **9 %** |
+
+The fine-tune fixed fluency (repetition down 3×), not facts: a 1.5B model still invents Uzbek dates
+and names.
 Write-up (Uzbek): [`docs/REPORT.uz.md`](docs/REPORT.uz.md)
 
 ## Architecture
