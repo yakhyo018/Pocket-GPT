@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     llamacpp_url: str = 'http://127.0.0.1:8080'
     openrouter_api_key: SecretStr | None = None
     openrouter_model: str = ''
+    # What the web app shows as the model's name, e.g. 'Qwen2.5-1.5B · LoRA'. Empty → the provider.
+    model_label: str = ''
 
     # Said to the model before every conversation. The language rule is the product's promise.
     system_prompt: str = (

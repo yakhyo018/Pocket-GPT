@@ -26,6 +26,8 @@ export interface Health {
 	status: string;
 	version: string;
 	provider: string;
+	/** The model's display name (POCKET_MODEL_LABEL), or the provider when no label is set. */
+	model: string;
 }
 
 export interface DoneInfo {

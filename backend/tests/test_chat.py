@@ -1,9 +1,12 @@
 import json
 
 import pytest
+from fastapi.testclient import TestClient
 
 from pocket.core.config import Settings
+from pocket.main import create_app
 from pocket.providers import create_provider
+from pocket.providers.fake import FakeProvider
 
 
 def parse(body: str) -> list[tuple[str, dict]]:
@@ -19,6 +22,13 @@ def test_health_names_the_provider(client):
     body = client.get('/health').json()
     assert body['status'] == 'ok'
     assert body['provider'] == 'fake'
+    assert body['model'] == 'fake', 'without a label the provider names the model'
+
+
+def test_health_shows_the_model_label(settings):
+    labelled = settings.model_copy(update={'model_label': 'Qwen2.5-1.5B · LoRA'})
+    body = TestClient(create_app(labelled, FakeProvider(delay=0))).get('/health').json()
+    assert body['model'] == 'Qwen2.5-1.5B · LoRA'
 
 
 @pytest.mark.parametrize(

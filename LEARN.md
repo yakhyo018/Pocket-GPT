@@ -95,6 +95,24 @@ set and a base-vs-tuned comparison prove the change, and the target languages ar
   names — LoRA on 1,200 machine-translated chats teaches form, not knowledge. A bigger base (7B on
   an L4/A100) or RAG would be the next step for facts.
 
+## UI polish for the portfolio (2026-11-10)
+
+- **One dark theme, colours as CSS variables.** A light theme later is one more `:root` block, not a
+  rewrite. Mockups were rendered to PNG first (static HTML + headless Chrome) and the user picked
+  the dark one before any app code changed.
+- **No new packages.** Icons are a dozen inline SVGs (`components/icons.tsx`); an icon library
+  would ship hundreds for twelve. Inter comes from `next/font/google`, which downloads the font at
+  build time and serves it from our origin — the visitor's browser never calls Google.
+- **Code blocks get a header and Copy** by overriding react-markdown's `pre` component; the
+  language comes from the `language-x` class react-markdown puts on `<code>`.
+- **The model's name comes from the backend:** `/health` returns `model` (`POCKET_MODEL_LABEL`),
+  so the web app never hard-codes which GGUF runs.
+- **Never read the clock during render.** Next.js prerenders the page; `new Date()` in a Client
+  Component is evaluated at build time and frozen into the HTML (Next 16 reports it as an error).
+  The "Today / Yesterday" grouping takes `now` when the list is fetched, in an effect.
+- **Phone:** the sidebar is a drawer (CSS `transform` + a scrim), so conversations are reachable on
+  a phone — the open item from C6.
+
 ## Interview questions
 
 1. Why stream with SSE and not WebSockets? One direction (server → browser) over plain HTTP —
@@ -110,3 +128,6 @@ set and a base-vs-tuned comparison prove the change, and the target languages ar
    scheduler + RNG state) and make the job idempotent: rerun → resume or skip.
 7. Why did three samples disagree with the test set? Small samples show anecdotes; a fixed test set
    measures the direction. Decide on the set, illustrate with samples.
+8. Why must `new Date()` not run in render in Next.js? The page is prerendered at build time; the
+   value would be the build's time, and server and browser would disagree (hydration mismatch).
+   Read the clock in an effect or event handler.

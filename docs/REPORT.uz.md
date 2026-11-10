@@ -107,7 +107,6 @@ llama-server (:8080, Metal) ── models/*.gguf        (yoki OpenRouter, xuddi 
 - **O'zbekcha dataset asosan mashina tarjimasi** (Dolly'ga o'xshash). Model tarjimaga xos uslubni ham o'rganishi mumkin.
 - **1.5B model ChatGPT emas**, ayniqsa faktlarda. Maqsad aniq o'lchanadigan yaxshilanish.
 - **Login yo'q.** Bitta lokal foydalanuvchi uchun. Backend'ni internetga shu holida ochib bo'lmaydi.
-- **Telefonda suhbatlar ro'yxati yashirin**, faqat "New chat" tugmasi bor.
 
 ## 8. Intervyu savollari
 

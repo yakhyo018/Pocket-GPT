@@ -23,6 +23,8 @@ desktop and phone, streaming, Stop (llama-server logged `cancel task`), saved co
 - **C3 run** on Colab: 225 steps, validation loss 1.791 → 1.722; adapter, checkpoints and GGUF on
   Google Drive (`MyDrive/pocket-gpt`). `models/pocketgpt-1.5b-q4_k_m.gguf` (941 MB, git-ignored).
 - **C4** `reports/EVAL.md`, `reports/eval_tuned.json`.
+- **UI polish** (2026-11-10): dark theme, English example cards, model card from `/health`
+  (`POCKET_MODEL_LABEL`), code blocks with Copy, reply timing, ⌘K new chat, phone drawer.
 
 ## Next (optional)
 
@@ -32,5 +34,4 @@ desktop and phone, streaming, Stop (llama-server logged `cancel task`), saved co
 
 - GGUF conversion runs only in the notebook (llama.cpp's scripts were not run on the Mac).
 - English in-language rate dropped 98 → 96 %; Uzbek answers still contain invented facts.
-- On a phone the conversation list is hidden (only "New chat").
 - No login: a single local user. Do not expose the backend to the internet as it is.
